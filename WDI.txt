@@ -1,0 +1,38 @@
+def NWD(a, b):
+	while b != 0:
+		pom = b
+		b = a % b
+		a = pom
+	return a
+		
+
+def binary_search(value, data):
+	left = 0
+	right = len(data)-1
+
+	while left < right:
+		middle = (left+right)//2
+		if data[middle] < value: 
+			left = middle + 1   
+		else:                   
+			right = middle 
+
+	if data[right] == value:
+		return right
+	else:
+		return None
+
+def binToDec(binarna):
+	dziesietna
+
+def decToBin(liczba):
+	i = 0
+	tab[31]
+	
+	while(liczba != 0):
+		tab[i += 1] = liczba % 2
+		liczba /= 2
+
+	for j in range(i - 1, -1, -1):
+		print(tab[j])
+	

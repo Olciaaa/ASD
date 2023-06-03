@@ -1,0 +1,124 @@
+package ola.studia.asd;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class Architects {
+
+    private Building[] offeredBuildings;
+    private int allowedCost;
+
+    private int[] sortedIndexes;
+
+    private int selectedCapacity;
+    private int[] selectedTownIndexes;
+
+    public Architects(Building[] offeredBuildings, int allowedCost) {
+        this.offeredBuildings = offeredBuildings;
+        this.allowedCost = allowedCost;
+        this.sortedIndexes = sortIndexesByA(offeredBuildings);
+    }
+
+    private int[] sortIndexesByA(Building[] offeredBuildings) {
+        List<Integer> indexes = new ArrayList<>(offeredBuildings.length);
+
+        for (int i = 0; i < offeredBuildings.length; i++) {
+            indexes.add(i);
+        }
+
+        indexes.sort((index1, index2) -> offeredBuildings[index1].a - offeredBuildings[index2].a);
+        return indexes.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private int calculateBuildingCapacity(Building building) {
+        return building.w * (building.b - building.a);
+    }
+
+    private int calculateTownRightEdge(List<Integer> townIndexes) {
+        return townIndexes.isEmpty() ? 0 : offeredBuildings[townIndexes.get(townIndexes.size() - 1)].b;
+    }
+
+    /*
+        Main recursive function.
+        @return measured maximum capacity following current buildings selection
+     */
+    private void selectOptimizedBuildings(int buildingPtr, int townCost, int townCapacity, List<Integer> townIndexes) {
+
+        if (buildingPtr >= sortedIndexes.length) {
+            if (townCapacity > selectedCapacity) {
+                selectedCapacity = townCapacity;
+                selectedTownIndexes = townIndexes.stream().mapToInt(Integer::intValue).toArray();
+            }
+        }
+
+        int townRightEdge = calculateTownRightEdge(townIndexes);
+        int currentPtr = buildingPtr;
+
+        while (currentPtr < sortedIndexes.length) {
+            int currentBuildingIndex = sortedIndexes[currentPtr];
+            int currentCapacity = calculateBuildingCapacity(offeredBuildings[currentBuildingIndex]);
+            int currentLeftEdge = offeredBuildings[currentBuildingIndex].a;
+            int currentCost = offeredBuildings[currentBuildingIndex].w;
+
+            if (currentLeftEdge >= townRightEdge && (currentCost + townCost) <= allowedCost) {
+                townIndexes.add(currentBuildingIndex);
+                selectOptimizedBuildings(currentPtr + 1, currentCost + townCost, currentCapacity + townCapacity, townIndexes);
+                townIndexes.remove(townIndexes.size() - 1);
+            }
+
+            currentPtr++;
+        }
+    }
+
+    public int[] selectBuildings() {
+        this.selectedCapacity = 0;
+        this.selectedTownIndexes = new int[0];
+        selectOptimizedBuildings(0, 0, 0, new ArrayList<>(offeredBuildings.length));
+        return selectedTownIndexes;
+    }
+
+    public static void main(String args[]) {
+        final Building[] offeredBuildings = new Building[] {
+                new Building(4, 0, 3, 5),
+                new Building(6, 8, 9, 2),
+                new Building(6, 19, 20, 3),
+                new Building(8, 15, 18, 7),
+                new Building(2, 4, 7, 3),
+                new Building(3, 10, 14, 6),
+                new Building(5, 13, 17, 5),
+        };
+        final int maxCost = 15;
+
+        Architects architects = new Architects(offeredBuildings, maxCost);
+        int[] selectedBuildings = architects.selectBuildings();
+
+        System.out.println(Stream.of(offeredBuildings).map(Building::toString).collect(Collectors.joining("\n")));
+        System.out.println(Arrays.toString(selectedBuildings));
+    }
+
+    private static class Building {
+        private int h;
+        private int a;
+        private int b;
+        private int w;
+
+        private Building(int h, int a, int b, int w) {
+            this.h = h;
+            this.a = a;
+            this.b = b;
+            this.w = w;
+        }
+
+        private int capacity() {
+            return h * (b - a);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Building <h: %s, a: %s, b: %s, w: %s, c: %s>", h, a, b, w, capacity());
+        }
+    }
+}
